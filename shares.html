@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Shares Found</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #2c2c2c;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .summary-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            line-height: 1.5;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Daily Shares Found</h1>
+    <div class="chart-container">
+        <canvas id="sharesChart" width="800" height="400"></canvas>
+    </div>
+
+    <h2>Summary Report</h2>
+    <div id="summaryReport" class="summary-container">
+        <!-- Summary content will be dynamically inserted here -->
+    </div>
+
+    <script>
+        let sharesChart;
+        let labels = [];
+        let data = [];
+        const today = new Date().toISOString().split('T')[0];
+
+        async function processLog() {
+            try {
+                const response = await fetch('p2pool.log');
+                const logContent = await response.text();
+                const logLines = logContent.split('\n');
+
+                // Extract data for "SHARE FOUND"
+                const dailyShareCount = {};
+                const pattern = /(\d{4}-\d{2}-\d{2}).*?SHARE FOUND/;
+
+                logLines.forEach(line => {
+                    const match = pattern.exec(line);
+                    if (match) {
+                        const date = match[1];
+                        dailyShareCount[date] = (dailyShareCount[date] || 0) + 1;
+                    }
+                });
+
+                // Update current day only
+                updateTodayBar(dailyShareCount[today] || 0);
+
+                // If this is the first load, build the full chart
+                if (labels.length === 0) {
+                    labels = Object.keys(dailyShareCount).sort();
+                    data = labels.map(date => dailyShareCount[date] || 0);
+                    buildChart();
+                    generateSummary();
+                }
+            } catch (error) {
+                console.error("Error fetching or processing the log file:", error);
+            }
+        }
+
+        function buildChart() {
+            const ctx = document.getElementById('sharesChart').getContext('2d');
+            sharesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Shares Found',
+                        data: data,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: 'white'
+                            },
+                            ticks: {
+                                color: 'white'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Shares Found',
+                                color: 'white'
+                            },
+                            ticks: {
+                                color: 'white'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTodayBar(todayShares) {
+            const todayIndex = labels.indexOf(today);
+            if (todayIndex !== -1) {
+                data[todayIndex] = todayShares;
+                sharesChart.data.datasets[0].data[todayIndex] = todayShares;
+                sharesChart.update();
+                generateSummary();
+            }
+        }
+
+        function generateSummary() {
+            const totalDays = labels.length;
+            const totalShares = data.reduce((sum, val) => sum + val, 0);
+            const averageSharesPerDay = (totalShares / totalDays).toFixed(2);
+            const maxShares = Math.max(...data);
+            const minShares = Math.min(...data);
+            const maxSharesDate = labels[data.indexOf(maxShares)];
+            const minSharesDate = labels[data.indexOf(minShares)];
+
+            const summaryReport = `
+                <p><strong>Total Days Analyzed:</strong> ${totalDays}</p>
+                <p><strong>Total Shares Found:</strong> ${totalShares}</p>
+                <p><strong>Average Shares Per Day:</strong> ${averageSharesPerDay}</p>
+                <p><strong>Day with Maximum Shares:</strong> ${maxSharesDate} (${maxShares} shares)</p>
+                <p><strong>Day with Minimum Shares:</strong> ${minSharesDate} (${minShares} shares)</p>
+            `;
+            document.getElementById('summaryReport').innerHTML = summaryReport;
+        }
+
+        // Run the log processing function initially
+        processLog();
+
+        // Set interval to update only today's bar every 30 seconds
+        setInterval(processLog, 30000);
+    </script>
+</body>
+</html>

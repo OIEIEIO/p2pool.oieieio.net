@@ -1,0 +1,1 @@
+{"hashrate_15m":19661,"hashrate_1h":15499,"hashrate_24h":75943,"total_hashes":44143105789,"shares_found":287,"shares_failed":0,"average_effort":106.817,"current_effort":21.080,"connections":1,"incoming_connections":1,"block_reward_share_percent":0.270,"workers":["127.0.0.1:33250,10203,503544,16784,xmrig-proxy"]}
