@@ -1,3 +1,9 @@
+Install the GeoIP2 library (geoip2/geoip2).
+
+If not, install it using Composer:
+```
+composer require geoip2/geoip2
+```
 /var/www/p2pool.oieieio.net$ tree
 ```
 ├── api
