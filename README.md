@@ -1,3 +1,7 @@
+https://p2pool.oieieio.net/
+
+https://p2pool.oieieio.net/shares.html
+
 Install the GeoIP2 library (geoip2/geoip2).
 
 If not, install it using Composer:
