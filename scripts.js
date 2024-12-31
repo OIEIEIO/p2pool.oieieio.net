@@ -284,6 +284,7 @@ async function fetchStratumStats() {
         updateField("stratum_total_hashes", data.total_hashes?.toLocaleString());
         updateField("stratum_shares_found", data.shares_found);
         updateField("stratum_shares_failed", data.shares_failed);
+        updateField("stratum_total_stratum_shares", data.total_stratum_shares);
         setEffortColor(document.getElementById("stratum_average_effort"), data.average_effort || 0);
         setEffortColor(document.getElementById("stratum_current_effort"), data.current_effort || 0);
         updateField("stratum_block_reward_share_percent", formatPercentage(data.block_reward_share_percent));
